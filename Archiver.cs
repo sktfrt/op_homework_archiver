@@ -4,21 +4,12 @@ namespace ArchiverApp;
 
 public static class Archiver
 {
-
-
-    /// <summary>
-    /// Должна сжимать строку методом RLE.
-    /// Текущая реализация не удовлетворяет всем тестам
-    /// Также требуется использовать метод WriteRun для записи в outputLine и заменить тип string на StringBuilder.
-    /// Пример: "aaabb" → "3a2b"
-    /// Пример: "aabccc"   → "2ab3c"
-    /// </summary>
-
     public static string CompressString(string inputLine)
     {
         char? lastC = null;
         int curCnt = 0;
-        string outputLine = "";
+        StringBuilder outputLine = new StringBuilder();
+
         foreach (char c in inputLine)
         {
             if (lastC == null)
@@ -29,14 +20,8 @@ public static class Archiver
             }
             if (c != lastC)
             {
-                if (Char.IsDigit((char)lastC) && lastC != '\\')
-                {
-                    outputLine += String.Format("{0}\\{1}", curCnt, lastC);
-                }
-                else
-                {
-                    outputLine += String.Format("{0}{1}", curCnt, lastC);
-                }
+                WriteRun(outputLine, (char)lastC, curCnt);
+
                 curCnt = 1;
                 lastC = c;
                 continue;
@@ -44,37 +29,58 @@ public static class Archiver
             curCnt += 1;
         }
 
-        if (Char.IsDigit((char)lastC) && lastC != '\\')
+        WriteRun(outputLine, (char)lastC, curCnt);
+
+        return outputLine.ToString();
+    }
+
+
+    public static string DecompressString(string compressed) // 3a2b
+    {
+        StringBuilder output = new StringBuilder();
+
+        for (int i = 0; i < compressed.Length; i++)
         {
-            outputLine += String.Format("{0}\\{1}", curCnt, lastC);
+            if (char.IsDigit(compressed[i]))
+            {
+                int count = compressed[i] - '0';
+
+                if (i + 1 < compressed.Length && !char.IsDigit(compressed[i + 1]))
+                {
+                    if (compressed[i + 1] == '\\')
+                    {
+                        i++;
+                    }
+                    if (i + 1 < compressed.Length)
+                    {
+                        output.Append(new string(compressed[i + 1], count));
+                        i++;
+                        continue;
+                    }
+                }
+            }
+
+            output.Append(compressed[i]);
+        }
+        return output.ToString();
+    }
+
+    public static void WriteRun(StringBuilder output, char symbol, int count)
+    {
+        if (count == 1)
+        {
+            output.Append(symbol);
+        }
+        else if (Char.IsDigit(symbol) && symbol != '\\')
+        {
+            output.Append(count);
+            output.Append('\\');
+            output.Append(symbol);
         }
         else
         {
-            outputLine += String.Format("{0}{1}", curCnt, lastC);
+            output.Append(count);
+            output.Append(symbol);
         }
-
-        return outputLine;
     }
-
-    /// <summary>
-    /// Заглушка: должна разжимать строку, сжатую методом RLE.
-    /// Пример: "3a2b" → "aaabb"
-    /// Пример: "2ab3c"   → "aabccc"
-    /// Важно: при экранирова
-    /// </summary>
-    public static string DecompressString(string compressed)
-    {
-        throw new NotImplementedException("implement me");
-    }
-
-    /// <summary>
-    /// Заглушка: должна записывать (count, symbol) в выходной буфер.
-    /// Пример: count=3, symbol='a' → "3a"
-    /// Пример: count=1, symbol='b' → "b"
-    /// </summary>
-    public static void WriteRun(StringBuilder output, char symbol, int count)
-    {
-        throw new NotImplementedException("implement me");
-    }
-    
 }
