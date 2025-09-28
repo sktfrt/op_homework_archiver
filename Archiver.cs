@@ -35,7 +35,7 @@ public static class Archiver
     }
 
 
-    public static string DecompressString(string compressed) // 3a2b
+    public static string DecompressString(string compressed) 
     {
         StringBuilder output = new StringBuilder();
 
@@ -43,13 +43,24 @@ public static class Archiver
         {
             if (char.IsDigit(compressed[i]))
             {
-                int count = compressed[i] - '0';
+                string numberStr = "";
+                int j = i;
+                while (j < compressed.Length && char.IsDigit(compressed[j]))
+                {
+                    numberStr += compressed[j];
+                    j++;
+                }
+
+                int count = int.Parse(numberStr);
+                i = j - 1;
 
                 if (i + 1 < compressed.Length && !char.IsDigit(compressed[i + 1]))
                 {
                     if (compressed[i + 1] == '\\')
                     {
+                        output.Append(compressed[i]);
                         i++;
+                        continue;
                     }
                     if (i + 1 < compressed.Length)
                     {
@@ -65,22 +76,32 @@ public static class Archiver
         return output.ToString();
     }
 
-    public static void WriteRun(StringBuilder output, char symbol, int count)
+    public static void WriteRun(StringBuilder output, char symbol, int count) 
     {
-        if (count == 1)
+        if (Char.IsDigit(symbol))
         {
-            output.Append(symbol);
-        }
-        else if (Char.IsDigit(symbol) && symbol != '\\')
-        {
-            output.Append(count);
-            output.Append('\\');
-            output.Append(symbol);
+            while (count > 0)
+            {
+                output.Append(symbol);
+                output.Append('\\');
+                count--;
+            }
         }
         else
         {
-            output.Append(count);
-            output.Append(symbol);
+            if (count == 1)
+            {
+                output.Append(symbol);
+            }
+            else if (symbol == '\\')
+            {
+                output.Append(new string('\\', count));
+            }
+            else
+            {
+                output.Append(count);
+                output.Append(symbol);
+            }   
         }
     }
 }
